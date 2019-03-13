@@ -1,0 +1,211 @@
+#include <iostream>
+#include <cmath>
+using namespace std;
+
+class polinom
+{
+    double *coef;
+    int grad;
+public:
+    double eval(double);
+    polinom() {};
+    polinom(const polinom & );
+    polinom(double*,int);///coef,grad
+
+    polinom & operator + (const polinom &);
+    polinom & operator - (const polinom &);
+    polinom & operator * (const polinom &);
+
+    friend ostream & operator << (ostream &, polinom &);
+    friend istream & operator >> (istream &, polinom &);
+    friend class pereche;
+};
+
+class pereche
+{
+    polinom pol;
+    double nr;
+public:
+    bool radacina ();
+    friend istream & operator >> (istream &, pereche &);
+    friend ostream & operator << (ostream &, pereche &);
+};
+
+bool pereche::radacina ()
+{
+    if (pol.eval(nr)==0)
+        return 1;
+    else return 0;
+}
+
+istream & operator >> (istream & in,  pereche & p)///Input PERECHE
+{
+    in>>p.pol;
+    cout<<"Citeste perechea: \n";
+    in>>p.nr;
+
+    return in;
+
+}
+
+ostream & operator << (ostream & out,  pereche & p)///Output PERECHE
+{
+    out<<"Perechea este: "<<p.nr<<'\n';
+    out<<"Polinomul este: "<<p.pol<<'\n';
+
+    return out;
+}
+
+istream & operator >> (istream & in,  polinom & p)///Input POLINOM
+{
+    int i;
+    cout<<"Citeste gradul polinomului: \n";
+    in>>p.grad;
+    p.coef= new double[p.grad+1];
+    cout<<"Citeste "<<p.grad+1<<" coeficienti : \n";
+    for (i=p.grad; i>=0; i--)
+    {
+        in>>p.coef[i];
+    }
+    return in;
+}
+
+ostream & operator << (ostream & out, polinom & p)///Output POLINOM
+{
+    int i=0;
+
+    for (i=p.grad; i>=1; i--)
+    {
+        out<<p.coef[i]<<"x^"<<i<<" + ";
+    }
+    out<<p.coef[0];
+    return out;
+}
+
+polinom & polinom::operator+ (const polinom & rhs)///ADUNARE
+{
+    int GrNou,i;
+    polinom p1;
+    if (grad<rhs.grad)
+        GrNou=rhs.grad;
+    else GrNou=grad;
+    p1.coef  = new double[GrNou+1];
+    p1.grad=GrNou;
+
+    for (i=0; i<=GrNou; i++)
+    {
+        p1.coef[i]=0;
+    }
+    for (i=0; i<=grad; i++)
+    {
+        p1.coef[i]+=coef[i];
+    }
+    for (i=0; i<=rhs.grad; i++)
+    {
+        p1.coef[i]+=rhs.coef[i];
+    }
+
+    return p1;
+}
+polinom & polinom::operator- (const polinom & rhs)///SCADERE
+{
+    int GrMax,i,gr,ok=1;
+    double c;
+    if (grad<rhs.grad)
+        GrMax=rhs.grad;
+    else GrMax=grad;
+    polinom p1;
+    gr=GrMax;
+    p1.coef= new double[GrMax+1];
+    for (i=GrMax; i>=0; i--)
+    {
+        c=coef[i]-rhs.coef[i];
+        if (c==0 && ok==1)
+            gr--;
+        else
+        {
+            ok=0;
+            p1.coef[i]=c;
+        }
+    }
+    if (ok==1)
+        p1.coef[0]=0;
+    p1.grad=gr;
+    return p1;
+
+}
+
+polinom & polinom::operator* (const polinom & rhs)///INMULTIRE
+{
+    int gr,i,j;
+    gr=grad + rhs.grad;
+    polinom p;
+    p.coef = new double[gr+1];
+    p.grad=gr;
+
+    for (i=0; i<=gr; i++)
+        p.coef[i]=0;
+
+    for (i=grad; i>=0; i--)
+    {
+        for (j=rhs.grad; j>=0; j--)
+        {
+            p.coef[i+j]+= coef[i] * rhs.coef[j];
+        }
+    }
+    return p;
+}
+
+double polinom::eval(double punct)///evaluare intr-un punct
+{
+    double p=coef[grad];
+
+    for (int i=grad-1; i>=0; i--)
+    {
+        p=p*punct+coef[i];
+    }
+    return p;
+}
+
+polinom::polinom (const polinom & p)///constructor copiere p1 <- p2
+{
+    grad=p.grad;
+    coef = new double[grad+1];
+    for (int i=0; i<=grad; i++)
+    {
+        coef[i]=p.coef[i];
+    }
+}
+//constructor
+polinom::polinom(double *cf,int gr) : grad(gr),coef(new double[gr+1])//creare polinom(sa da gradul + vector coeficienti)
+{
+    for (int i=0; i<=gr; i++)
+    {
+        coef[i]=cf[i];
+    }
+}
+int main()
+{
+    polinom p1,p2,p3;
+
+    cin>>p1>>p2;
+
+    p3=p1+p2;
+    cout<<"Adunare: "<<p3<<'\n';
+
+    p3=p1-p2;
+    cout<<"Scadere: "<<p3<<'\n';
+
+    p3=p1*p2;
+    cout<<"Inmultire: "<<p3<<'\n';
+
+    pereche per1;
+
+    cin>>per1;
+    cout<<per1;
+    if (per1.radacina()==1)
+        cout<<"Perechea polinomului este radacina";
+    else cout<<"Perechea polinomului NU este radacina";
+
+    return 0;
+}
